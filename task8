@@ -1,0 +1,188 @@
+task8a
+if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
+> library(tidyverse)
+── Attaching core tidyverse packages ─────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.1     ✔ stringr   1.5.2
+✔ ggplot2   4.0.0     ✔ tibble    3.3.0
+✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+✔ purrr     1.1.0     
+── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package to force all conflicts to become errors
+> data("chromosome", package = "tidybiology") #load data
+> glimpse(chromosome) 
+Rows: 24
+Columns: 14
+$ id                     <fct> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, X, Y
+$ length_mm              <dbl> 85, 83, 67, 65, 62, 58, 54, 50, 48, 46, 46, 45, 39, 36, 35, 31, 28, 27, 20, 21, 16, 17, 53, 20
+$ basepairs              <dbl> 248956422, 242193529, 198295559, 190214555, 181538259, 170805979, 159345973, 145138636, 138394717, 133…
+$ variations             <dbl> 12151146, 12945965, 10638715, 10165685, 9519995, 9130476, 8613298, 8221520, 6590811, 7223944, 7535370,…
+$ protein_codinggenes    <int> 2058, 1309, 1078, 752, 876, 1048, 989, 677, 786, 733, 1298, 1034, 327, 830, 613, 873, 1197, 270, 1472,…
+$ pseudo_genes           <int> 1220, 1023, 763, 727, 721, 801, 885, 613, 661, 568, 821, 617, 372, 523, 510, 465, 531, 247, 512, 249, …
+$ totallongnc_rna        <int> 1200, 1037, 711, 657, 844, 639, 605, 735, 491, 579, 710, 848, 397, 533, 639, 799, 834, 453, 628, 384, …
+$ totalsmallnc_rna       <int> 496, 375, 298, 228, 235, 234, 208, 214, 190, 204, 233, 227, 104, 239, 250, 187, 235, 109, 179, 131, 71…
+$ mi_rna                 <int> 134, 115, 99, 92, 83, 81, 90, 80, 69, 64, 63, 72, 42, 92, 78, 52, 61, 32, 110, 57, 16, 31, 128, 15
+$ r_rna                  <int> 66, 40, 29, 24, 25, 26, 24, 28, 19, 32, 24, 27, 16, 10, 13, 32, 15, 13, 13, 15, 5, 5, 22, 7
+$ sn_rna                 <int> 221, 161, 138, 120, 106, 111, 90, 86, 66, 87, 74, 106, 45, 65, 63, 53, 80, 51, 29, 46, 21, 23, 85, 17
+$ sno_rna                <int> 145, 117, 87, 56, 61, 73, 76, 52, 51, 56, 76, 62, 34, 97, 136, 58, 71, 36, 31, 37, 19, 23, 64, 3
+$ miscnc_rna             <int> 192, 176, 134, 104, 119, 105, 143, 82, 96, 89, 97, 115, 75, 79, 93, 51, 99, 41, 61, 68, 24, 62, 100, 8
+$ centromereposition_mbp <dbl> 125.0, 93.3, 91.0, 50.4, 48.4, 61.0, 59.9, 45.6, 49.0, 40.2, 53.7, 35.8, 17.9, 17.6, 19.0, 36.6, 24.0,…
+> chr <- chromosome %>%
++   rename_with(~ tolower(gsub("[^a-z0-9]+", "_", .x)))
+> sel <- chr %>%  #select variations, protein coding genes and miRNAs
++   select(matches("(?i)^(variations)$|(?i)protein.*coding.*genes|(?i)mirnas?$"))
+> summary_tbl <- sel %>%
++   pivot_longer(everything(), names_to = "variable", values_to = "value") %>%
++   group_by(variable) %>%
++   summarise(
++     mean   = mean(value, na.rm = TRUE),
++     median = median(value, na.rm = TRUE),
++     max    = max(value, na.rm = TRUE),
++     .groups = "drop"
++   ) %>%
++   arrange(variable)
+> summary_tbl
+------
+task8b
+# A tibble: 2 × 4
+  variable                mean  median      max
+  <chr>                  <dbl>   <dbl>    <dbl>
+1 protein_codinggenes     850.     836     2058
+2 variations          6484572. 6172346 12945965
+> nm <- names(chromosome)
+> cat("name include：\n", paste(nm, collapse = ", "), "\n\n")
+name include：
+ id, length_mm, basepairs, variations, protein_codinggenes, pseudo_genes, totallongnc_rna, totalsmallnc_rna, mi_rna, r_rna, sn_rna, sno_rna, miscnc_rna, centromereposition_mbp 
+
+> cand <- grep("(?i)(^size$|^length$|chrom.*size|chrom.*length|_bp$|_kb$|_mb$|base.?pairs|megabase)",
++              nm, value = TRUE)
+> if (length(cand) == 0) {
++   num_cols <- nm[sapply(chromosome, function(x) is.numeric(x) || is.integer(x))]
++   if (length(num_cols) == 0) stop("no numerical column in this data frame. Please confirm the data first.")
++   
++   if (interactive() && length(num_cols) > 1) {
++     message('No automatic match for the "size" column. Please choose from numeric columns:')
++     idx <- utils::menu(num_cols, title = "select a column representing chromosome size")
++     size_col <- num_cols[idx]
++   } else {
++     size_col <- num_cols[1]
++     message("By default the first numeric column is used:", size_col)
++   }
++ } else {
++   size_col <- cand[1]
++   message("Automatically match to columns：", size_col)
++ }
+Automatically match to columns：basepairs
+> size_vec <- chromosome[[size_col]]
+> if (!is.numeric(size_vec)) {
++   size_vec <- readr::parse_number(as.character(size_vec))
++ }
+> df <- tibble(size = size_vec) |> filter(is.finite(size))
+> ggplot(df, aes(x = size)) +
++   geom_histogram(aes(y = after_stat(density)),
++                  bins = 30, color = "white", fill = "#6baed6") +
++   geom_density(linewidth = 1) +
++   labs(title = "Distribution of chromosome size",
++        x = paste0("Chromosome size (column: ", size_col, ")"),
++        y = "Density") +
++   theme_minimal(base_size = 12)
+> 
+------
+task8c
+ print(names(chromosome))
+ [1] "id"                     "length_mm"              "basepairs"              "variations"             "protein_codinggenes"   
+ [6] "pseudo_genes"           "totallongnc_rna"        "totalsmallnc_rna"       "mi_rna"                 "r_rna"                 
+[11] "sn_rna"                 "sno_rna"                "miscnc_rna"             "centromereposition_mbp"
+> len_col   <- "length_mm"             # <-- 改这里
+> pcg_col   <- "protein_codinggenes"   # <-- 改这里
+> mirna_col <- "mi_rna"         # <-- 改这里
+> df <- chromosome |>
++   transmute(
++     length_num = readr::parse_number(as.character(.data[[len_col]])),
++     pcg        = suppressWarnings(as.numeric(.data[[pcg_col]])),
++     mirna      = suppressWarnings(as.numeric(.data[[mirna_col]]))
++   ) |>
++   filter(is.finite(length_num) & is.finite(pcg) & is.finite(mirna))
+> stopifnot(nrow(df) > 0)
+> r_genes  <- cor(df$length_num, df$pcg)
+> r_mirnas <- cor(df$length_num, df$mirna)
+> p_genes <- ggplot(df, aes(x = length_num, y = pcg)) +
++   geom_point(alpha = 0.7) +
++   geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
++   labs(
++     title = sprintf("Protein-coding genes vs chromosome length (r = %.2f)", r_genes),
++     x = paste0("Chromosome length (", len_col, ")"),
++     y = paste0("Protein-coding genes (", pcg_col, ")")
++   ) +
++   theme_minimal(base_size = 12)
+> p_mirna <- ggplot(df, aes(x = length_num, y = mirna)) +
++   geom_point(alpha = 0.7) +
++   geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
++   labs(
++     title = sprintf("miRNAs vs chromosome length (r = %.2f)", r_mirnas),
++     x = paste0("Chromosome length (", len_col, ")"),
++     y = paste0("miRNAs (", mirna_col, ")")
++   ) +
++   theme_minimal(base_size = 12)
+> p_genes
+`geom_smooth()` using formula = 'y ~ x'
+> p_mirna
+`geom_smooth()` using formula = 'y ~ x'
+> 
+------
+task8d
+ library(tidybiology)
+> data(proteins, package = "tidybiology")
+> names(proteins)  
+[1] "uniprot_id"       "gene_name"        "gene_name_alt"    "protein_name"     "protein_name_alt" "sequence"        
+[7] "length"           "mass"            
+> pr <- proteins |>
++   as_tibble() |>
++   rename_with(~ tolower(gsub("[^a-z0-9]+","_", .x)))
+#rename the name of length and mass
+> len_col  <- names(pr)[str_detect(names(pr), regex("^length$|prot.*length|aa$", ignore_case = TRUE))][1]
+> mass_col <- names(pr)[str_detect(names(pr), regex("^mass$|molecular.*mass|kda$|dalton", ignore_case = TRUE))][1]
+> if (any(is.na(c(len_col, mass_col)))) { print(names(pr)); stop("length / mass") }
+> to_numeric <- function(x) {
++   if (is.numeric(x)) return(x)
++   readr::parse_number(as.character(x))
++ }
+> df <- pr |>
++   transmute(
++     length = to_numeric(.data[[len_col]]),
++     mass   = to_numeric(.data[[mass_col]])
++   ) |>
++   filter(is.finite(length), is.finite(mass))
+
+> summary_tbl <- df |>   #summary
++   pivot_longer(c(length, mass), names_to = "variable", values_to = "value") |>
++   group_by(variable) |>
++   summarise(mean = mean(value), median = median(value), max = max(value), .groups = "drop")
+> print(summary_tbl)
+# A tibble: 2 × 4
+  variable   mean median     max
+  <chr>     <dbl>  <dbl>   <dbl>
+1 length     557.   414    34350
+2 mass     62061. 46140. 3816030
+
+#visualization
+> r <- cor(df$length, df$mass)
+> ggplot(df, aes(length, mass, color = length)) +
++   geom_point(alpha = 0.75, size = 2) +
++   geom_smooth(method = "lm", se = FALSE, linewidth = 1.1, color = "black") +
++   scale_color_viridis_c(option = "C") +
++   labs(
++     title = sprintf("Protein mass vs length (r = %.2f)", r),
++     x = paste0("Protein length (", len_col, ")"),
++     y = paste0("Protein mass (", mass_col, ")"),
++     color = "Length"
++   ) +
++   theme_minimal(base_size = 13) +
++   theme(panel.grid.minor = element_blank(),
++         plot.title = element_text(face = "bold"))
+`geom_smooth()` using formula = 'y ~ x'
+> 
+
+
