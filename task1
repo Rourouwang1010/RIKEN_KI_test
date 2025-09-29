@@ -1,1 +1,16 @@
-oibvdsaxv
+Task 1
+Question 2a: what is the medically relevant insight from the article?
+Answer: 
+This study moves the onset of human forebrain oligodendrogenesis substantially earlier: oligodendroglial lineage cells are already detectable at PCW 8 (post-conception week 8). These earliest OPCs arise predominantly from ventral forebrain territories (including the MGE), rather than first becoming prominent only in the second trimester as has often been assumed; the authors cross-validate this conclusion with spatiotemporal and epigenomic evidence. This implies that the etiologic window for white-matter–related conditions (developmental leukodystrophies, prematurity-associated white-matter injury, and inborn metabolic diseases with white-matter involvement) opens earlier and remains open longer, making early-embryonic environmental/metabolic interventions potentially clinically meaningful. At the mechanistic level, the study delineates the pre-OPC → OPC switch in transcriptional programs and identifies the EGFR/NOTCH pathway as central to this “budding” transition; DLL1/3, NOTCH1, and MFNG are coordinately upregulated along the lineage trajectory. These axes offer actionable levers to modulate OPC specification, proliferation, and quiescent pools. Clinically, they represent concrete targets for correcting defects in oligodendrogenesis.
+
+Question 2b: Which genomics technologies were used?
+Answer: 
+The technologies uesd in this study are as followed: 
+1. Single-cell transcriptomics (scRNA-seq, 10x Genomics Chromium v2/v3)
+The Key Resources table lists the v2 and v3 reagent kits; the Methods specify use of 10x v2/v3 with sequencing on an Illumina HiSeq 2500.
+2. Single-nucleus ATAC-seq (snATAC-seq / 10x Single Cell ATAC v1)
+The Key Resources table lists “Chromium Single Cell ATAC v1”; the Methods note nuclei isolation following the official 10x protocol and sequencing on an Illumina HiSeq 2500; the Data Availability section also specifies “single-nuclei ATAC-seq.”
+3. Hybridization-based in situ sequencing (HybISS)
+The Methods include a dedicated “Hybridization-based In Situ Sequencing (HybISS)” section with the experimental workflow; the Software/Algorithms section provides a link to the HybISS code repository.
+4. RNAscope HiPlex in situ hybridization (ISH)
+The Key Resources table lists “RNAscope HiPlex ISH”; the Methods provide the HiPlex v2 experimental steps.
