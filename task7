@@ -1,4 +1,4 @@
-Task7_1
+#Task7_1
 > install.packages("remotes")
 trying URL 'https://cran.rstudio.com/bin/macosx/big-sur-arm64/contrib/4.5/remotes_2.5.0.tgz'
 Content type 'application/x-gzip' length 431784 bytes (421 KB)
@@ -176,7 +176,78 @@ The downloaded binary packages are in
 +   theme_minimal(base_size = 12) +
 +   theme(legend.position = "none")
 > 
-Task7_2
+#Task7_2
+> library(data.table)
+data.table 1.17.8 using 4 threads (see ?getDTthreads).  Latest news: r-datatable.com
+> library(ggplot2)
+> path <- "/Users/rui/Desktop/研究相关定题材料/KI-SciLifelab/microarray_data.tab"
+> file.exists(path)       
+[1] TRUE
+> dt <- fread(path, sep = "\t", na.strings = c("", "NA", "NaN", "NULL"))
+> gene_ids <- as.character(dt[[1]])
+> X <- as.matrix(as.data.frame(lapply(dt[, -1], as.numeric)))
+> rownames(X) <- make.unique(gene_ids)
+> ## ========== a) how big is the matrix ==========
+> cat("Rows(genes) =", nrow(X), "  Cols(samples) =", ncol(X), "\n")
+Rows(genes) = 553   Cols(samples) = 999 
+> ## ========== b) missing values per gen and visualize==========
+> na_per_gene   <- rowSums(is.na(X))
+> pct_per_gene  <- na_per_gene / ncol(X) * 100
+> g <- rownames(X)
+> if (is.null(g)) g <- paste0("gene_", seq_len(nrow(X)))
+> bad <- which(is.na(g) | g == "")
+> if (length(bad)) g[bad] <- paste0("gene_", bad)
+> df_miss <- data.frame(
++   gene = g,
++   NA_count = na_per_gene,
++   NA_pct = pct_per_gene,
++   row.names = NULL 
++ )
+> head(df_miss, 5)
+    gene NA_count    NA_pct
+1  1.802       72  7.207207
+2 gene_2      225 22.522523
+3  1.079       72  7.207207
+4  3.607       74  7.407407
+5   -1.7      126 12.612613
+> > # visualize Histogram
+> hist(pct_per_gene, breaks = 40, main = "Missing % per gene",
++      xlab = "Percent missing", col = "gray80", border = "white")
+> library(ggplot2) #use ggplot
+> df_miss <- data.frame(pct = unname(pct_per_gene)) 
+> ggplot(df_miss, aes(pct)) +
++   geom_histogram(bins = 40, color = "white") +
++   labs(title = "Missing % per gene", x = "Percent missing", y = "Count") +
++   theme_minimal()
+> ## ========== c) more than X%(10/20/50) missing values ==========
+> thr <- c(10, 20, 50)
+> genes_over <- lapply(thr, function(t) rownames(X)[pct_per_gene > t])
+> names(genes_over) <- paste0("over_", thr, "pct")
+> sapply(genes_over, length) #numbers of values
+over_10pct over_20pct over_50pct 
+       346        236          8 
+> #find the gene name of missing values
+> head(genes_over$over_20pct, 10)
+ [1] NA      "NA.2"  "NA.9"  "NA.10" "NA.11" "NA.12" "NA.14" "1.951" "NA.15" "1.333"
+> head(genes_over$over_20pct, 20)
+ [1] NA       "NA.2"   "NA.9"   "NA.10"  "NA.11"  "NA.12"  "NA.14"  "1.951"  "NA.15"  "1.333"  "-0.468" "0.359"  "0.157"  "-0.047"
+[15] "0.071"  "-0.663" "0.01"   "-0.087" "0.186"  "0.509" 
+> head(genes_over$over_20pct, 50)
+ [1] NA        "NA.2"    "NA.9"    "NA.10"   "NA.11"   "NA.12"   "NA.14"   "1.951"   "NA.15"   "1.333"   "-0.468"  "0.359"   "0.157"  
+[14] "-0.047"  "0.071"   "-0.663"  "0.01"    "-0.087"  "0.186"   "0.509"   "0.022"   "-0.848"  "0.868"   "0.807"   "0.084"   "0.406"  
+[27] "0.771"   "0.64"    "0.438"   "-0.138"  "-0.391"  "0.387"   "0.683"   "-6.21"   "0.284"   "-0.2"    "0.1"     "0.585"   "0.387.1"
+[40] "NA.16"   "0.316"   "NA.17"   "0.819"   "1.376"   "0.62"    "0.507"   "0.209"   "-0.01"   "1.28"    "0.302"  
+> ## ========== d) replace the missing values bu average expression ==========
+> row_means <- rowMeans(X, na.rm = TRUE) # if all row is NA, change to NaN
+> X_imp <- X
+> idx_na <- which(is.na(X_imp), arr.ind = TRUE)
+> X_imp[idx_na] <- row_means[idx_na[,1]] # replace the missing values bu average expression
+> all_na_rows <- which(!is.finite(row_means))
+> if (length(all_na_rows) > 0) {
++   message(length(all_na_rows), " genes are all-NA; left as NA (no imputation possible).")
++ }
+2 genes are all-NA; left as NA (no imputation possible).
+> 
 
 
 
