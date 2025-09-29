@@ -1,0 +1,130 @@
+> data("CO2") #open data CO2
+> help("CO2") #use help function
+> #calculate the average and median CO2 uptake of the plants from Quebec and Mississippi
+> mean(CO2$uptake[CO2$Type == "Quebec"])
+[1] 33.54286
+> median(CO2$uptake[CO2$Type == "Quebec"])
+[1] 37.15
+> mean(CO2$uptake[CO2$Type == "Mississippi"])
+[1] 20.88333
+> median(CO2$uptake[CO2$Type == "Mississippi"])
+[1] 19.3
+> #[Optional] In the “airway” example data from Bioconductor, how many genes are expressed in each sample? How many genes are not expressed in any sample?
+> install.packages("BiocManager")
+trying URL 'https://cran.rstudio.com/bin/macosx/big-sur-arm64/contrib/4.5/BiocManager_1.30.26.tgz'
+Content type 'application/x-gzip' length 504670 bytes (492 KB)
+==================================================
+downloaded 492 KB
+
+
+The downloaded binary packages are in
+	/var/folders/k5/vl1gr2fs5x12gm1hhbqch7pw0000gn/T//RtmpTrqulE/downloaded_packages
+> if (!requireNamespace("BiocManager", quietly = TRUE)) 
++   install.packages("BiocManager")
+> BiocManager::install("airway")            # upload airway
+'getOption("repos")' replaces Bioconductor standard repositories, see 'help("repositories", package = "BiocManager")' for details.
+Replacement repositories:
+    CRAN: https://cran.rstudio.com/
+Bioconductor version 3.21 (BiocManager 1.30.26), R 4.5.1 (2025-06-13)
+Old packages: 'rmarkdown'
+Update all/some/none? [a/s/n]: 
+n
+Warning message:
+package(s) not installed when version(s) same as or greater than current; use `force = TRUE` to re-install: 'airway' 
+
+> library(airway); library(SummarizedExperiment)
+Loading required package: SummarizedExperiment
+Loading required package: MatrixGenerics
+Loading required package: matrixStats
+
+Attaching package: ‘MatrixGenerics’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse, colCounts, colCummaxs, colCummins, colCumprods,
+    colCumsums, colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs, colMads, colMaxs, colMeans2, colMedians,
+    colMins, colOrderStats, colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds, colSums2, colTabulates,
+    colVarDiffs, colVars, colWeightedMads, colWeightedMeans, colWeightedMedians, colWeightedSds, colWeightedVars,
+    rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet, rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+    rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps, rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians,
+    rowMins, rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks, rowSdDiffs, rowSds, rowSums2, rowTabulates,
+    rowVarDiffs, rowVars, rowWeightedMads, rowWeightedMeans, rowWeightedMedians, rowWeightedSds, rowWeightedVars
+
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+Loading required package: generics
+
+Attaching package: ‘generics’
+
+The following objects are masked from ‘package:base’:
+
+    as.difftime, as.factor, as.ordered, intersect, is.element, setdiff, setequal, union
+
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind, colnames, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, is.unsorted, lapply, Map, mapply, match, mget, order, paste, pmax, pmax.int, pmin,
+    pmin.int, Position, rank, rbind, Reduce, rownames, sapply, saveRDS, table, tapply, unique, unsplit, which.max,
+    which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with 'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+
+Attaching package: ‘Biobase’
+
+The following object is masked from ‘package:MatrixGenerics’:
+
+    rowMedians
+
+The following objects are masked from ‘package:matrixStats’:
+
+    anyMissing, rowMedians
+> data("airway")
+> cts <- assays(airway)[["counts"]] 
+> # ① First calculate the number of "expressed" genes in each sample (定义：count > 0）
+> expressed_per_sample <- colSums(cts > 0)
+> # ② output in excel
+> result <- data.frame(
++   sample = colnames(cts),
++   expressed_genes = as.integer(expressed_per_sample),
++   row.names = NULL
++ )
+> result
+      sample expressed_genes
+1 SRR1039508           24633
+2 SRR1039509           24527
+3 SRR1039512           25699
+4 SRR1039513           23124
+5 SRR1039516           25508
+6 SRR1039517           25998
+7 SRR1039520           24662
+8 SRR1039521           23991
+> sum(rowSums(cts > 0) == 0) #not expressed in any sample
+[1] 30208
+> 
