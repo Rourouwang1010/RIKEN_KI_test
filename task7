@@ -1,0 +1,183 @@
+Task7_1
+> install.packages("remotes")
+trying URL 'https://cran.rstudio.com/bin/macosx/big-sur-arm64/contrib/4.5/remotes_2.5.0.tgz'
+Content type 'application/x-gzip' length 431784 bytes (421 KB)
+==================================================
+downloaded 421 KB
+
+
+The downloaded binary packages are in
+	/var/folders/k5/vl1gr2fs5x12gm1hhbqch7pw0000gn/T//RtmprwpW1K/downloaded_packages
+> library(remotes)
+> install_url("http://emotion.utu.fi/wp-content/uploads/2019/11/nummenmaa_1.0.tar.gz",dependencies=TRUE)
+Downloading package from url: http://emotion.utu.fi/wp-content/uploads/2019/11/nummenmaa_1.0.tar.gz
+These packages have more recent versions available.
+It is recommended to update all of them.
+Which would you like to update?
+
+1: All                            
+2: CRAN packages only             
+3: None                           
+4: rmarkdown (2.29 -> 2.30) [CRAN]
+
+Enter one or more numbers, or an empty line to skip updates: 1
+rmarkdown (2.29 -> 2.30) [CRAN]
+Installing 1 packages: rmarkdown
+trying URL 'https://cran.rstudio.com/bin/macosx/big-sur-arm64/contrib/4.5/rmarkdown_2.29.tgz'
+Content type 'application/x-gzip' length 2632006 bytes (2.5 MB)
+==================================================
+downloaded 2.5 MB
+
+
+The downloaded binary packages are in
+	/var/folders/k5/vl1gr2fs5x12gm1hhbqch7pw0000gn/T//RtmprwpW1K/downloaded_packages
+── R CMD build ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+✔  checking for file ‘/private/var/folders/k5/vl1gr2fs5x12gm1hhbqch7pw0000gn/T/RtmprwpW1K/remotes45adc18fa38/nummenmaa/DESCRIPTION’ ...
+─  preparing ‘nummenmaa’:
+✔  checking DESCRIPTION meta-information ...
+─  checking for LF line-endings in source and make files and shell scripts
+─  checking for empty or unneeded directories
+─  building ‘nummenmaa_1.0.tar.gz’
+   
+* installing *source* package ‘nummenmaa’ ...
+** this is package ‘nummenmaa’ version ‘1.0’
+** using staged installation
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (nummenmaa)
+> library(ggplot2)
+> df <- read.csv(file.choose(), stringsAsFactors = FALSE) #read files
+> str(df) #data composation
+'data.frame':	100 obs. of  4 variables:
+ $ uniqId : chr  "p1" "p2" "p3" "p4" ...
+ $ species: chr  "jedi" "jedi" "jedi" "jedi" ...
+ $ length : num  175 252 230 176 213 ...
+ $ weight : num  71.3 70.8 70.7 80.4 82 64.2 71.8 75 74.3 72.8 ...
+> head(df) # name of row and column
+  uniqId species length weight
+1     p1    jedi  174.6   71.3
+2     p2    jedi  252.2   70.8
+3     p3    jedi  229.8   70.7
+4     p4    jedi  176.2   80.4
+5     p5    jedi  213.3   82.0
+6     p6    jedi  112.5   64.2
+> names(df) # name of column
+[1] "uniqId"  "species" "length"  "weight" 
+> names(df)[names(df)=="length"] <- "height" #change the name
+> names(df) #check name
+[1] "uniqId"  "species" "height"  "weight" 
+> df$species <- as.factor(df$species) #clean data to make sure that the data type is correct
+> df$height  <- as.numeric(df$height)
+> # remain two colums as species and height
+> df <- df[ , c("species","height")]
+> df <- na.omit(df)
+> ## ========== 1) base R: hist() ==========
+> ## 1.1 Draw a histogram for each species 
+> par(mfrow = c(1, 2), mar = c(4,4,2,1))
+> sp <- levels(df$species)
+> library(readr)
+> names(df)
+[1] "species" "height" 
+> h <- df$height
+> if (is.factor(h)) h <- as.character(h)
+> for (i in seq_along(sp)) {
++   x <- df$height[df$species == sp[i]]
++   hist(x,
++        main = paste("height -", sp[i]),
++        xlab = "height",
++        col  = "gray80",
++        border = "white",
++        breaks = "FD")      # try "FD"、"Sturges"、or numeric value like 20
++   lines(density(x), lwd = 2)  # opthinal
++ }
+> par(mfrow = c(1,1))
+>  ## 1.2 overlay by species
+> h_min <- min(df$height); h_max <- max(df$height)
+> brks  <- seq(h_min, h_max, length.out = 30)   # try different breaks：20/30/40
+> x1 <- df$height[df$species == sp[1]]
+> x2 <- df$height[df$species == sp[2]]
+> hist(x1, breaks = brks, col = rgb(0.2,0.5,0.9,0.4), border="white",
++      xlab = "Height", main = "Overlay by species")
+> hist(x2, breaks = brks, col = rgb(0.9,0.3,0.3,0.4), border="white", add=TRUE)
+> legend("topright", fill = c(rgb(0.2,0.5,0.9,0.4), rgb(0.9,0.3,0.3,0.4)),
++        legend = sp, bty = "n")
+> ## ========== 2) ggplot2: geom_histogram() ==========
+> # 2.1 species one by one
+> p1 <- ggplot(df, aes(x = height)) +
++   geom_histogram(aes(y = after_stat(density)),
++                  bins = 30,        # try bins = 20/30/40 or set binwidth
++                  color = "white", fill = "#6baed6") +
++   geom_density(linewidth = 1.1) +
++   facet_wrap(~ species, nrow = 1) +
++   labs(title = "Height distributions by species",
++        x = "Height", y = "Density") +
++   theme_minimal(base_size = 12)
+> p1
+> # 2.2 overley by species
+> p2 <- ggplot(df, aes(x = height, fill = species, color = species)) +
++   geom_histogram(position = "identity", alpha = 0.4,
++                  bins = 30) +   # or binwidth = diff(range(height))/30
++   labs(title = "Overlayed histograms by species",
++        x = "Height", y = "Count") +
++   theme_minimal(base_size = 12)
+> p2
+> # 2.3 “custom breaks”（binwidth）
+> rng <- range(df$height)
+> binwidth <- diff(rng) / 25      # try 15/25/40
+> p3 <- ggplot(df, aes(x = height, fill = species)) +
++   geom_histogram(position = "identity", alpha = 0.5,
++                  binwidth = binwidth, color = "white") +
++   labs(title = paste0("Custom binwidth = ", round(binwidth, 2)),
++        x = "Height", y = "Count") +
++   theme_minimal(base_size = 12)
+> p3
+>  ## ---------- A) base R：box plot ----------
+> graphics.off()  #close previous fig
+> par(mar = c(4,4,2,1))
+> boxplot(height ~ species, data = dat,
++         notch = TRUE, outline = TRUE,
++         col = "gray90", border = "gray40",
++         xlab = "Species", ylab = "Height",
++         main = "height by species (base R)")
+> stripchart(height ~ species, data = dat,
++            vertical = TRUE, method = "jitter",
++            pch = 19, col = rgb(0,0,0,0.4), add = TRUE)
+## ---------- B) ggplot2：geom_boxplot ----------
+> stopifnot(exists("df"))
+> height_col  <- grep("height|stature", names(df), ignore.case = TRUE, value = TRUE)[1]
+> species_col <- grep("species|type|group", names(df), ignore.case = TRUE, value = TRUE)[1]
+> stopifnot(!is.na(height_col), !is.na(species_col))
+> h <- df[[height_col]]
+> if (!is.numeric(h)) {
++   h <- as.character(h)
++   h <- gsub("[^0-9,.-]", "", h)  
++   h <- gsub(",", ".", h)         
++   h <- suppressWarnings(as.numeric(h))
++ }
+> dat <- data.frame(
++   species = factor(df[[species_col]]),
++   height  = h
++ )
+> dat <- dat[is.finite(dat$height), ]
+> library(ggplot2)
+> ggplot(dat, aes(x = species, y = height, fill = species)) +
++   geom_boxplot(width = 0.6, outlier.shape = 21, outlier.alpha = 0.6) +
++   stat_summary(fun = mean, geom = "point", shape = 23, size = 2.2, fill = "white") +
++   labs(title = "Body height by species", x = "Species", y = "Height") +
++   theme_minimal(base_size = 12) +
++   theme(legend.position = "none")
+> 
+Task7_2
+
+
+
+
