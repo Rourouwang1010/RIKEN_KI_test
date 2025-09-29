@@ -1,0 +1,65 @@
+> #R Functions 1
+> ratio_mean_median <- function(x, na.rm = TRUE, direction = c("mean/median", "median/mean")) {
++   direction <- match.arg(direction)
++   if (!is.numeric(x)) stop("x must be a given vector")
++   if (na.rm) x <- x[!is.na(x)]
++   if (length(x) == 0) stop("output is empty or NA")
++   
++   m  <- mean(x)
++   md <- median(x)
++   
++   if (direction == "mean/median") {
++     if (md == 0) return(NA_real_)  # or return(Inf)
++     return(m / md)
++   } else {
++     if (m == 0) return(NA_real_)   # or return(Inf)
++     return(md / m)
++   }
++ }
+> # test in database of CO2 of uptake
+> data(CO2)
+> ratio_mean_median(CO2$uptake)
+[1] 0.9615935
+> ratio_mean_median(CO2$uptake, direction = "median/mean")
+[1] 1.039941
+------
+>  #R Functions 2
+> mean_without_extremes <- function(x, na.rm = TRUE, mode = c("one", "all")) {
++   if (!is.numeric(x)) stop("x must be numeric vector")
++   if (na.rm) x <- x[!is.na(x)]
++   if (length(x) < 3) stop("At least 3 numbers are needed to remove the minimum and maximum and then find the average")
++   
++   mode <- match.arg(mode)
++   
++   if (mode == "one") {    # Remove only one minimum and one maximum value
++     i_min <- which.min(x)
++     i_max <- which.max(x)
++     keep  <- setdiff(seq_along(x), c(i_min, i_max))
++     return(mean(x[keep]))
++   } else { # mode == "all"
++     # Remove all elements equal to the minimum or maximum value
++     mn <- min(x); mx <- max(x)
++     keep <- (x != mn) & (x != mx)
++     if (!any(keep)) stop("After removing all extreme values, there are no remaining elements and the mean cannot be calculated.")
++     return(mean(x[keep]))
++   }
++ }
+> x1 <- c(1, 2, 3, 100)
+> mean_without_extremes(x1, mode = "one")  # Remove only one of 1 and 100 -> mean(2,3) = 2.5
+[1] 2.5
+x2 <- c(1, 1, 2, 3, 100, 100)
+> mean_without_extremes(x2, mode = "one")  # Only one 1 and one 100 are dropped
+[1] 26.5
+> mean_without_extremes(x2, mode = "all")  # Drop all 1s and all 100s, leaving only 2,3 -> 2.5
+[1] 2.5
+------
+write explanation of why, how, and when not to use pipes:
+#Why:pipesimprove_readabilityandreducenesting.How:chainstepswith|>(baseR)or%>%(magrittr);use'.'asplaceholderwhennotfirstarg.Whennot:verylongchains,branching,needintermediatechecks,heavyside-effects,orenvironment-dependentfunctions(e.g.,assign/get).
+
+write explanation of why they could be useful in my work:
+#Applyfamilyfunctionsacceleratevectorizedrow/column,list,andgroupedops;theyreduceloops,lowerbugrisk,improveclarity,andenablefastsummaries,featureengineering,andscalableresamplingacrossdatasets;crucialforreproducibleRanalysisinSHMandbiomedicalstudies.
+
+
+
+
+
