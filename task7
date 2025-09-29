@@ -248,6 +248,41 @@ over_10pct over_20pct over_50pct
 + }
 2 genes are all-NA; left as NA (no imputation possible).
 > 
+Task7_3
+> data(CO2)
+> if (!requireNamespace("ggplot2", quietly = TRUE)) install.packages("ggplot2")
+> library(ggplot2)
+> ## 1) Scatter + Smooth: View the concentration-absorption curve (faceted by Type and colored by Treatment)
+> p1 <- ggplot(CO2, aes(x = conc, y = uptake, color = Treatment)) +
++   geom_point(alpha = 0.7) +
++   geom_smooth(method = "loess", se = FALSE, linewidth = 1) +
++   facet_wrap(~ Type, nrow = 1) +
++   labs(title = "CO2 uptake vs concentration",
++        x = "CO2 concentration", y = "Uptake") +
++   theme_minimal(base_size = 12)
+> p1
+`geom_smooth()` using formula = 'y ~ x'
+> ## 2) Response curve for each plant: see individual differences (thin line) + treatment group mean (thick line)
+> p2 <- ggplot(CO2, aes(conc, uptake, group = Plant, color = Treatment)) +
++   geom_line(alpha = 0.35) +
++   stat_summary(aes(group = interaction(Type, Treatment)),
++                fun = mean, geom = "line", linewidth = 1.2, color = "black") +
++   facet_wrap(~ Type, nrow = 1) +
++   labs(title = "Per-plant response curves with group means",
++        x = "CO2 concentration", y = "Uptake") +
++   theme_minimal(base_size = 12)
+> p2
+> ## 3) Boxplot: Comparing the distribution of each group (Type × Treatment)
+> CO2$Group <- interaction(CO2$Type, CO2$Treatment, sep = " : ")
+> p3 <- ggplot(CO2, aes(x = Group, y = uptake, fill = Treatment)) +
++   geom_boxplot(width = 0.6, outlier.alpha = 0.6) +
++   stat_summary(fun = mean, geom = "point", shape = 23, fill = "white", size = 2) +
++   labs(title = "Uptake distribution by Type × Treatment",
++        x = NULL, y = "Uptake") +
++   theme_minimal(base_size = 12) +
++   theme(axis.text.x = element_text(angle = 20, hjust = 1))
+> p3
+> 
 
 
 
